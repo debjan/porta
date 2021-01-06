@@ -1,6 +1,4 @@
 flask
 gevent
 gunicorn
-lxml
 requests
-selenium
