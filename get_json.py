@@ -10,15 +10,11 @@ buildings = ['residence-1', 'residence-2']
 
 def validate(url):
     '''Verify that URL exists'''
-
-    req = requests.get(url, headers=headers)
-
-    return req.status_code == 200
+    return requests.get(url, headers=headers).status_code == 200
 
 
 def get_floor(url, floor={}):
     '''Get floor apartments'''
-
     r = requests.get(url, headers=headers)
     settings = re.search('var settings = ({.*?});', r.text)
     spots = json.loads(settings.group(1))['spots']
@@ -41,7 +37,6 @@ def get_floor(url, floor={}):
 
 def get_building(building, ceil=100):
     '''Get building apartments'''
-
     apartments = {}
     for floor in range(ceil):
         url = f'{base_url}{building}-sprat-{floor + 1}/'
@@ -55,13 +50,13 @@ def get_building(building, ceil=100):
 
 def update_buildings():
     '''Update buildings data'''
-
     if not os.path.exists('static'):
         os.makedirs('static')
     for building in buildings:
         with open(f'static/{building}.json', 'w') as js:
             apartments = get_building(building)
             json.dump(apartments, js, ensure_ascii=False)
+
 
 if __name__ == '__main__':
 
