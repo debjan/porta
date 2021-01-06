@@ -21,7 +21,7 @@ def get_floor(url, floor={}):
 
     r = requests.get(url, headers=headers)
     settings = re.search('var settings = ({.*?});', r.text)
-    spots = json.loads(settings.group(1), encoding='utf-8')['spots']
+    spots = json.loads(settings.group(1))['spots']
     for spot in spots:
         try:
             fill =spot['default_style']['fill']
@@ -55,12 +55,13 @@ def get_building(building, ceil=100):
 
 def update_buildings():
     '''Update buildings data'''
+
     if not os.path.exists('static'):
         os.makedirs('static')
     for building in buildings:
         with open(f'static/{building}.json', 'w') as js:
             apartments = get_building(building)
-            json.dump(apartments, js)
+            json.dump(apartments, js, ensure_ascii=False)
 
 if __name__ == '__main__':
 
