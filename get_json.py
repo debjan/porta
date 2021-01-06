@@ -1,9 +1,6 @@
-import json
+import json, os, re
 
-from lxml import html
 import requests
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 
 
 base_url = 'https://www.porta.com.mk/'
@@ -19,42 +16,25 @@ def validate(url):
     return req.status_code == 200
 
 
-def get_driver(url):
-    '''Get page from selenium'''
-
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--no-startup-window')
-    options.add_argument('log-level=3')
-
-    driver = Chrome(options=options)
-    driver.get(url)
-
-    return driver
-
-
 def get_floor(url, floor={}):
     '''Get floor apartments'''
 
-    driver = get_driver(url)
-    doc = html.fromstring(driver.page_source)
-    polygons = doc.xpath('//svg[@class="hs-poly-svg"]/polygon')
-    for polygon in polygons:
-        style = {x.split(':')[0]: x.split(':')[1].strip() for x in
-                 polygon.xpath('@style')[0].split(';') if len(x)}
+    r = requests.get(url, headers=headers)
+    settings = re.search('var settings = ({.*?});', r.text)
+    spots = json.loads(settings.group(1), encoding='utf-8')['spots']
+    for spot in spots:
+        try:
+            fill =spot['default_style']['fill']
+            if fill == '#ff0000':
+                state = 'Продаден'
+            elif fill == '#ffff00':
+                state = 'Резервиран'
+            else:
+                state = 'Достапен'
 
-        if style['fill'].startswith('rgba(255, 0, 0'):
-            state = 'Продаден'
-        elif style['fill'].startswith('rgba(255, 255, 0'):
-            state = 'Резервиран'
-        else:
-            state = 'Достапен'
-
-        floor[polygon.xpath('@data-shape-title')[0]] = state
-
-    driver.close()
+            floor[spot['title']] = state
+        except:
+            pass
 
     return floor
 
@@ -75,7 +55,8 @@ def get_building(building, ceil=100):
 
 def update_buildings():
     '''Update buildings data'''
-
+    if not os.path.exists('static'):
+        os.makedirs('static')
     for building in buildings:
         with open(f'static/{building}.json', 'w') as js:
             apartments = get_building(building)
