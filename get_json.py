@@ -50,10 +50,11 @@ def get_building(building, ceil=100):
 
 def update_buildings():
     '''Update buildings data'''
-    if not os.path.exists('static'):
-        os.makedirs('static')
+    path = f'{os.path.dirname(os.path.abspath(__file__))}'
+    if not os.path.exists(f'{path}/static'):
+        os.makedirs(f'{path}/static')
     for building in buildings:
-        with open(f'static/{building}.json', 'w') as js:
+        with open(f'{path}/static/{building}.json', 'w') as js:
             apartments = get_building(building)
             json.dump(apartments, js, ensure_ascii=False)
 
